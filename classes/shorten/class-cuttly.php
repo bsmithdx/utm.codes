@@ -13,6 +13,7 @@ namespace UtmDotCodes;
 class Cuttly implements \UtmDotCodes\Shorten {
 
 	const API_URL = 'https://cutt.ly/api/api.php';
+	const ERROR_CODE_UNIQUE_PREFIX = 'cuttly';
 
 	/**
 	 * API credentials for Cutt.ly API.
@@ -42,7 +43,13 @@ class Cuttly implements \UtmDotCodes\Shorten {
 	 */
 	public function __construct( $api_key ) {
 		$this->api_key = $api_key;
-	}
+        $this->add_custom_error_code_filter(1, 'the shortened link comes from the domain that shortens the link, i.e. the link has already been shortened');
+        $this->add_custom_error_code_filter(2, 'the entered link is not a link');
+        $this->add_custom_error_code_filter(3, 'the preferred link name is already taken');
+        $this->add_custom_error_code_filter(4, 'Invalid API key');
+        $this->add_custom_error_code_filter(5, 'the link has not passed the validation. Includes invalid characters');
+        $this->add_custom_error_code_filter(6, 'The link provided is from a blocked domain');
+    }
 
 	/**
 	 * See interface for docblock.
@@ -63,7 +70,10 @@ class Cuttly implements \UtmDotCodes\Shorten {
 		    //assemble the long url with the utm query string
 		    $link_to_shorten = $data['utmdclink_url'] . $query_string;
 		    //assemble the full url for the GET request to the API endpoint
-		    $fullQueryURL = self::API_URL . '?key=' . $this->api_key . '&short=' . $link_to_shorten . '&name=' . $data['utmdclink_shorturl'];
+		    $fullQueryURL = add_query_arg([
+		            'key' => $this->api_key,
+                    'short' => urlencode($link_to_shorten),
+                ], self::API_URL);
 			$response = wp_remote_get(
 				$fullQueryURL,
 				// Selective overrides of WP_Http() defaults.
@@ -77,8 +87,6 @@ class Cuttly implements \UtmDotCodes\Shorten {
 					],
 				]
 			);
-            var_dump($response, true);
-
 			if ( isset( $response->errors ) ) {
 				$this->error_code = 100;
 			} else {
@@ -86,19 +94,22 @@ class Cuttly implements \UtmDotCodes\Shorten {
 				$response_code = intval( $response['response']['code'] );
 				if ( 200 === $response_code || 201 === $response_code ) {
 				    $urlData = $body['url'];
-				    $status = $urlData['status'];
-				    if ( 7 == $status) {
+				    $status = (int) $urlData['status'];
+				    if ( $status === 7) {
+
+				        //if the status is 7 then the link has been shortened (according to API docs: https://cutt.ly/cuttly-api)
                         $response_url = '';
 
-                        if ( isset( $body['shortLink'] ) ) {
-                            $response_url = $body['shortLink'];
+                        if ( isset( $urlData['shortLink'] ) ) {
+                            $response_url = $urlData['shortLink'];
                         }
 
                         if ( filter_var( $response_url, FILTER_VALIDATE_URL ) ) {
-                            $this->response = esc_url( wp_unslash( $body['shortLink'] ) );
+                            $this->response = esc_url( wp_unslash( $urlData['shortLink'] ) );
                         }
                     } else {
-                        //handle error status codes
+				        //otherwise we handle the status codes according to the API docs: https://cutt.ly/cuttly-api
+                        $this->set_custom_error_code($status);
                     }
 				} elseif ( 403 === $response_code ) {
 					$this->error_code = 4030;
@@ -126,4 +137,36 @@ class Cuttly implements \UtmDotCodes\Shorten {
 	public function get_error() {
 		return $this->error_code;
 	}
+
+    /**
+     * sets the error code for a custom shortener error
+     * @param $error_code
+     */
+	private function set_custom_error_code($error_code) {
+	    $this->error_code = self::ERROR_CODE_UNIQUE_PREFIX . $error_code;
+
+	}
+
+    /**
+     * adds a filter for a custom shortener error code
+     * @param $custom_error_code
+     * @param $custom_error_message
+     * @param string $custom_error_class
+     */
+	private function add_custom_error_code_filter($custom_error_code, $custom_error_message, $custom_error_class = 'notice-info') {
+        add_filter(
+            'utmdc_error_message',
+            function( $error_message, $error_code ) use ($custom_error_code, $custom_error_message, $custom_error_class) {
+                if ( $custom_error_code . self::ERROR_CODE_UNIQUE_PREFIX === $error_code ) {
+                    $error_message = [
+                        'style'   => $custom_error_class,
+                        'message' => $custom_error_message,
+                    ];
+                }
+                return $error_message;
+            },
+            10,
+            2
+        );
+    }
 }
