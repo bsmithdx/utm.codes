@@ -1742,6 +1742,46 @@ class UtmDotCodes {
 					'message' => esc_html__( 'Rebrandly API experienced an error when shortening the link, please try again later.', 'utm-dot-codes' ),
 				];
 				break;
+
+            /**
+             * Cuttly
+             */
+            case 4221:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'The shortened link comes from the domain that shortens the link, i.e. the link has already been shortened.', 'utm-dot-codes' ),
+                ];
+                break;
+            case 4222:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'The entered link is not a link.', 'utm-dot-codes' ),
+                ];
+                break;
+            case 4223:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'The preferred link name is already taken.', 'utm-dot-codes' ),
+                ];
+                break;
+            case 4224:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( ' Invalid API key.', 'utm-dot-codes' ),
+                ];
+                break;
+            case 4225:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'the link has not passed the validation. Includes invalid characters.', 'utm-dot-codes' ),
+                ];
+                break;
+            case 4226:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'The link provided is from a blocked domain.', 'utm-dot-codes' ),
+                ];
+                break;
 		}
 
 		return apply_filters( 'utmdc_error_message', $error_message, $error_code );
