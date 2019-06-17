@@ -81,7 +81,7 @@ class Cuttly implements \UtmDotCodes\Shorten {
 				]
 			);
 			if ( isset( $response->errors ) ) {
-				$this->error_code = 100;
+				$this->error_code = 4220;
 			} else {
 				$body = json_decode( $response['body'], true);
 				$response_code = intval( $response['response']['code'] );
@@ -105,9 +105,9 @@ class Cuttly implements \UtmDotCodes\Shorten {
                         $this->error_code = (int) ('422'.$status);
                     }
 				} elseif ( 403 === $response_code ) {
-					$this->error_code = 4030;
+					$this->error_code = 4227;
 				} else {
-					$this->error_code = 500;
+					$this->error_code = 4228;
 				}
 			}
 		}

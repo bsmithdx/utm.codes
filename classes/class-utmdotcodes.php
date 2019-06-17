@@ -1746,6 +1746,14 @@ class UtmDotCodes {
             /**
              * Cuttly
              */
+            //connection error
+            case 4220:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'Unable to connect to cutt.ly API to shorten url. Please try again later.', 'utm-dot-codes' ),
+                ];
+                break;
+            // status codes
             case 4221:
                 $error_message = [
                     'style'   => 'notice-error',
@@ -1780,6 +1788,19 @@ class UtmDotCodes {
                 $error_message = [
                     'style'   => 'notice-error',
                     'message' => esc_html__( 'The link provided is from a blocked domain.', 'utm-dot-codes' ),
+                ];
+                break;
+            //
+            case 4227:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'cutt.ly API responded with unauthorized error. API Key is invalid or rate limit exceeded.', 'utm-dot-codes' ),
+                ];
+                break;
+            case 4228:
+                $error_message = [
+                    'style'   => 'notice-error',
+                    'message' => esc_html__( 'cutt.ly API experienced an error when shortening the link, please try again later.', 'utm-dot-codes' ),
                 ];
                 break;
 		}
